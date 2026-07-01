@@ -177,11 +177,21 @@
   .admin-msg { font-size:12px; margin-top:8px; display:none; }
   .admin-msg.ok { color:var(--green); display:block; }
   .admin-msg.err { color:var(--red); display:block; }
-  .lock-status { display:flex; align-items:center; justify-content:space-between; background:var(--grey-lt); border-radius:10px; padding:14px; margin-bottom:14px; }
-  .lock-status .label { font-size:13px; font-weight:700; color:var(--navy); }
-  .lock-status .state { font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; }
-  .toggle-lock-btn { background:var(--burgundy); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-family:inherit; font-size:12.5px; font-weight:700; cursor:pointer; width:100%; }
   .admin-note { font-size:11px; color:#9AA1AE; margin-top:14px; line-height:1.6; }
+  .perm-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:12px 4px; border-bottom:1px solid #EEF0F3; }
+  .perm-row:last-of-type { border-bottom:none; }
+  .perm-text { font-size:13px; color:#2B3242; font-weight:600; }
+  .perm-desc { font-size:11px; color:#9AA1AE; margin-top:3px; font-weight:400; }
+  .toggle-switch { position:relative; display:inline-block; width:46px; height:26px; flex:none; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#D8DCE3; border-radius:26px; transition:.2s; }
+  .toggle-slider::before { content:""; position:absolute; height:20px; width:20px; right:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .toggle-switch input:checked + .toggle-slider { background:var(--burgundy); }
+  .toggle-switch input:checked + .toggle-slider::before { transform:translateX(-20px); }
+  .persistence-note { font-size:11.5px; border-radius:8px; padding:10px 12px; margin-top:14px; font-weight:600; }
+  .persistence-note.ok { background:var(--green-lt); color:var(--green); }
+  .persistence-note.warn { background:var(--gold-lt); color:#7A5E00; }
+  .login-blocked-msg { background:var(--red-lt); color:var(--red); border-radius:10px; padding:12px 16px; font-size:13px; font-weight:600; text-align:center; margin-top:14px; display:none; }
 
   .methodology { background:#fff; border-radius:12px; padding:16px 20px; margin-top:14px; font-size:12px; color:#6B7280; box-shadow:0 2px 10px rgba(20,25,40,.06); }
   .methodology b { color:var(--navy); }
@@ -227,6 +237,7 @@
     </div>
     <button class="login-submit" id="login-submit">تسجيل الدخول</button>
     <div class="login-error" id="login-error">كلمة المرور غير صحيحة، أو لم يتم اختيار المستخدم.</div>
+    <div class="login-blocked-msg" id="login-blocked-msg">🚫 الدخول موقوف حاليًا من قبل إدارة الجمعية. يرجى التواصل معهم لإعادة تفعيل الدخول.</div>
     <div class="login-hint">هذه اللوحة محمية بصلاحيات دخول خاصة بجمعية سندكم ومؤسسة إرتقاء الخليج فقط.</div>
   </div>
 </div>
@@ -381,13 +392,36 @@
       <div class="section-title"><span class="title-left"><span class="bar"></span> لوحة إدارة الصلاحيات</span></div>
       <div class="admin-grid">
         <div class="admin-card">
-          <h3>حالة التحديثات من قبل شركة إرتقاء</h3>
-          <div class="lock-status">
-            <span class="label">الحالة الحالية</span>
-            <span class="state" id="lock-state-badge">—</span>
+          <h3>صلاحيات وقيود مستخدمي شركة إرتقاء</h3>
+          <div class="perm-row">
+            <div>
+              <div class="perm-text">إيقاف تحديث نسب الإنجاز</div>
+              <div class="perm-desc">منع شركة إرتقاء من تعديل نسب إنجاز المهام في تبويب «تحديث الإنجاز»</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="perm-block-updates"><span class="toggle-slider"></span></label>
           </div>
-          <button class="toggle-lock-btn" id="toggle-lock-btn">—</button>
-          <div class="admin-note">عند الإيقاف، لن تتمكن شركة إرتقاء من تعديل نسب الإنجاز في تبويب «تحديث الإنجاز» — ويبقى العرض متاحًا لهم دائمًا.</div>
+          <div class="perm-row">
+            <div>
+              <div class="perm-text">إيقاف دخول المستخدمين على اللوحة</div>
+              <div class="perm-desc">منع شركة إرتقاء من تسجيل الدخول إلى اللوحة بالكامل</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="perm-block-login"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="perm-row">
+            <div>
+              <div class="perm-text">إيقاف خاصية عرض التقارير</div>
+              <div class="perm-desc">إخفاء تبويب «التقارير» عن شركة إرتقاء</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="perm-block-reports"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="perm-row">
+            <div>
+              <div class="perm-text">إيقاف تصدير وطباعة التقارير</div>
+              <div class="perm-desc">تعطيل أزرار التصدير (CSV) والطباعة أمام شركة إرتقاء</div>
+            </div>
+            <label class="toggle-switch"><input type="checkbox" id="perm-block-export"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="persistence-note" id="persistence-note">—</div>
         </div>
         <div class="admin-card">
           <h3>تغيير كلمات المرور</h3>
@@ -401,7 +435,7 @@
           </div>
           <button class="admin-submit" id="save-passwords-btn">حفظ التغييرات</button>
           <div class="admin-msg" id="admin-msg"></div>
-          <div class="admin-note">ملاحظة: هذه الصفحة ملف مستقل لا يتصل بخادم، لذلك أي تغيير في كلمات المرور يبقى ساريًا خلال الجلسة الحالية فقط في هذا المتصفح، ويعود للقيم الافتراضية عند إعادة تحميل الملف من جديد.</div>
+          <div class="admin-note">تُحفظ كلمات المرور بشكل دائم في هذا المتصفح على هذا الجهاز (ما لم تظهر رسالة تحذير الحفظ أدناه). لتفعيل الحفظ الدائم بشكل موثوق، افتح الملف مباشرة في المتصفح (وليس داخل نافذة معاينة داخل تطبيق آخر).</div>
         </div>
       </div>
     </section>
@@ -428,11 +462,42 @@ const INITIAL_TASKS = [{"id": 1, "phase": 1, "month": "الشهر الأول", "
 
 let tasks = INITIAL_TASKS.map(t => ({...t}));
 
-// ---------------- Auth state ----------------
-let PASSWORDS = { admin: 'Sanad@2026', irtiqa: 'Irtiqa@2026' };
+// ---------------- Auth & persistent settings ----------------
+const STORAGE_KEY = 'sandokom_irtiqa_dashboard_settings_v1';
+const DEFAULT_PASSWORDS = { admin: 'Sanad@2026', irtiqa: 'Irtiqa@2026' };
+const DEFAULT_PERMISSIONS = { blockUpdates:false, blockLogin:false, blockReports:false, blockExport:false };
+
+let PASSWORDS = { ...DEFAULT_PASSWORDS };
+let PERMISSIONS = { ...DEFAULT_PERMISSIONS };
+let storageAvailable = true;
 let auth = { role: null };
-let updatesLocked = false;
 let selectedRole = null;
+
+function loadSettings() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.passwords) PASSWORDS = { ...DEFAULT_PASSWORDS, ...parsed.passwords };
+      if (parsed.permissions) PERMISSIONS = { ...DEFAULT_PERMISSIONS, ...parsed.permissions };
+    }
+    const testKey = STORAGE_KEY + '_test';
+    window.localStorage.setItem(testKey, '1');
+    window.localStorage.removeItem(testKey);
+    storageAvailable = true;
+  } catch (e) {
+    storageAvailable = false;
+  }
+}
+function saveSettings() {
+  if (!storageAvailable) return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ passwords: PASSWORDS, permissions: PERMISSIONS }));
+  } catch (e) {
+    storageAvailable = false;
+  }
+}
+loadSettings();
 
 const TABS = [
   {id:'overview',  label:'نظرة عامة',        roles:['admin','irtiqa']},
@@ -450,16 +515,19 @@ document.querySelectorAll('.role-card').forEach(card => {
     card.classList.add('selected');
     selectedRole = card.dataset.role;
     document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-blocked-msg').style.display = 'none';
   });
 });
 
 function doLogin() {
   const pass = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
-  if (!selectedRole || !pass || pass !== PASSWORDS[selectedRole]) {
-    errEl.style.display = 'block';
-    return;
-  }
+  const blockedEl = document.getElementById('login-blocked-msg');
+  errEl.style.display = 'none';
+  blockedEl.style.display = 'none';
+  if (!selectedRole) { errEl.style.display = 'block'; return; }
+  if (selectedRole === 'irtiqa' && PERMISSIONS.blockLogin) { blockedEl.style.display = 'block'; return; }
+  if (!pass || pass !== PASSWORDS[selectedRole]) { errEl.style.display = 'block'; return; }
   auth.role = selectedRole;
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
@@ -467,6 +535,7 @@ function doLogin() {
   buildTabsNav();
   buildTaskTable();
   buildReportTasksTable();
+  syncAdminPanel();
   render();
 }
 document.getElementById('login-submit').addEventListener('click', doLogin);
@@ -482,7 +551,11 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 
 function buildTabsNav() {
   const nav = document.getElementById('tabs-nav');
-  const allowed = TABS.filter(t => t.roles.includes(auth.role));
+  const allowed = TABS.filter(t => {
+    if (!t.roles.includes(auth.role)) return false;
+    if (auth.role === 'irtiqa' && t.id === 'reports' && PERMISSIONS.blockReports) return false;
+    return true;
+  });
   nav.innerHTML = allowed.map((t,i) => `<button class="tab-btn ${i===0?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('');
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'+allowed[0].id).classList.add('active');
@@ -494,6 +567,7 @@ function buildTabsNav() {
       document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
     });
   });
+  updateToolbarVisibility();
 }
 
 function todayClamped() {
@@ -650,23 +724,10 @@ function render() {
     </div>`).join('');
 
   // Lock banner + input disabling
-  const isLockedForUser = updatesLocked && auth.role === 'irtiqa';
+  const isLockedForUser = PERMISSIONS.blockUpdates && auth.role === 'irtiqa';
   document.getElementById('lock-banner').classList.toggle('show', isLockedForUser);
   document.getElementById('update-hint').style.display = isLockedForUser ? 'none' : 'flex';
   document.querySelectorAll('.pct-slider, .pct-number').forEach(el => el.disabled = isLockedForUser);
-
-  // Admin panel state
-  if (auth.role === 'admin') {
-    const badge = document.getElementById('lock-state-badge');
-    const btn = document.getElementById('toggle-lock-btn');
-    if (updatesLocked) {
-      badge.textContent = 'موقوفة'; badge.style.background = '#FBEAE9'; badge.style.color = '#C0392B';
-      btn.textContent = 'تفعيل التحديثات لشركة إرتقاء'; btn.style.background = '#2E7D32';
-    } else {
-      badge.textContent = 'مفعّلة'; badge.style.background = '#E5F3E6'; badge.style.color = '#2E7D32';
-      btn.textContent = 'إيقاف التحديثات لشركة إرتقاء'; btn.style.background = '#7A1F2B';
-    }
-  }
 
   renderReports();
 }
@@ -748,7 +809,7 @@ document.getElementById('tasks-body').addEventListener('input', e => {
 });
 
 document.getElementById('reset-btn').addEventListener('click', () => {
-  if (updatesLocked && auth.role === 'irtiqa') return;
+  if (PERMISSIONS.blockUpdates && auth.role === 'irtiqa') return;
   tasks = INITIAL_TASKS.map(t => ({...t}));
   buildTaskTable(); buildReportTasksTable(); render();
 });
@@ -768,10 +829,45 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// ---------------- Admin actions ----------------
-document.getElementById('toggle-lock-btn').addEventListener('click', () => {
-  updatesLocked = !updatesLocked;
-  render();
+// ---------------- Admin panel sync & permission enforcement ----------------
+function syncAdminPanel() {
+  if (auth.role !== 'admin') return;
+  document.getElementById('perm-block-updates').checked = PERMISSIONS.blockUpdates;
+  document.getElementById('perm-block-login').checked = PERMISSIONS.blockLogin;
+  document.getElementById('perm-block-reports').checked = PERMISSIONS.blockReports;
+  document.getElementById('perm-block-export').checked = PERMISSIONS.blockExport;
+  const note = document.getElementById('persistence-note');
+  if (storageAvailable) {
+    note.className = 'persistence-note ok';
+    note.textContent = '✅ الإعدادات تُحفظ بشكل دائم في هذا المتصفح على هذا الجهاز، وتبقى سارية بعد إغلاق الصفحة وإعادة فتحها من جديد.';
+  } else {
+    note.className = 'persistence-note warn';
+    note.textContent = '⚠️ تعذّر الحفظ الدائم في هذه البيئة (قد تكون المعاينة داخل نافذة محمية). افتح الملف مباشرة في المتصفح خارج المعاينة ليعمل الحفظ الدائم؛ حاليًا الإعدادات ستُطبَّق لهذه الجلسة فقط.';
+  }
+}
+
+function updateToolbarVisibility() {
+  const blocked = auth.role === 'irtiqa' && PERMISSIONS.blockExport;
+  ['print-btn','export-general-btn','export-tasks-btn','print-btn-2','export-general-btn-2','print-btn-3','export-tasks-btn-2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.disabled = blocked;
+    el.style.opacity = blocked ? '.4' : '1';
+    el.style.cursor = blocked ? 'not-allowed' : 'pointer';
+    el.title = blocked ? 'تم إيقاف هذه الخاصية من قبل إدارة الجمعية' : '';
+  });
+}
+
+document.querySelectorAll('#perm-block-updates, #perm-block-login, #perm-block-reports, #perm-block-export').forEach(chk => {
+  chk.addEventListener('change', () => {
+    PERMISSIONS.blockUpdates = document.getElementById('perm-block-updates').checked;
+    PERMISSIONS.blockLogin   = document.getElementById('perm-block-login').checked;
+    PERMISSIONS.blockReports = document.getElementById('perm-block-reports').checked;
+    PERMISSIONS.blockExport  = document.getElementById('perm-block-export').checked;
+    saveSettings();
+    updateToolbarVisibility();
+    render();
+  });
 });
 document.getElementById('save-passwords-btn').addEventListener('click', () => {
   const na = document.getElementById('new-admin-pass').value.trim();
@@ -780,13 +876,15 @@ document.getElementById('save-passwords-btn').addEventListener('click', () => {
   if (!na && !ni) { msg.className='admin-msg err'; msg.textContent='لم يتم إدخال أي كلمة مرور جديدة.'; return; }
   if (na) PASSWORDS.admin = na;
   if (ni) PASSWORDS.irtiqa = ni;
+  saveSettings();
   document.getElementById('new-admin-pass').value = '';
   document.getElementById('new-irtiqa-pass').value = '';
-  msg.className='admin-msg ok'; msg.textContent='تم حفظ كلمات المرور الجديدة لهذه الجلسة بنجاح.';
+  msg.className='admin-msg ok'; msg.textContent='تم حفظ كلمات المرور الجديدة بنجاح' + (storageAvailable ? ' بشكل دائم.' : ' لهذه الجلسة فقط (الحفظ الدائم غير متاح في هذه البيئة).');
 });
 
 // ---------------- Print ----------------
 function doPrint() {
+  if (auth.role === 'irtiqa' && PERMISSIONS.blockExport) { alert('تم إيقاف خاصية الطباعة من قبل إدارة الجمعية.'); return; }
   document.getElementById('print-date-line').textContent = 'تاريخ الطباعة: ' + fmt(new Date()) + ' — بواسطة: ' + (ROLE_LABEL[auth.role]||'');
   window.print();
 }
@@ -806,6 +904,7 @@ function downloadCSV(filename, rows) {
   URL.revokeObjectURL(url);
 }
 function exportGeneralReport() {
+  if (auth.role === 'irtiqa' && PERMISSIONS.blockExport) { alert('تم إيقاف خاصية تصدير التقارير من قبل إدارة الجمعية.'); return; }
   if (!lastCompute) render();
   const {elapsedPct, overallPct, done, progress, notstarted, gap, remainingDays, elapsedDays} = lastCompute;
   const byPhase = phaseData();
@@ -823,6 +922,7 @@ function exportGeneralReport() {
   downloadCSV('التقرير_العام_' + fmt(new Date()).replace(/\//g,'-') + '.csv', rows);
 }
 function exportTasksReport() {
+  if (auth.role === 'irtiqa' && PERMISSIONS.blockExport) { alert('تم إيقاف خاصية تصدير التقارير من قبل إدارة الجمعية.'); return; }
   const rows = [['م','المرحلة','الشهر','تاريخ البدء','تاريخ الانتهاء','المهمة','المسؤول','نسبة الإنجاز %','الحالة']];
   tasks.forEach((t,i) => rows.push([i+1, 'المرحلة '+t.phase, t.month, t.start, t.end, t.text, t.resp, t.pct+'%', STATUS_LABEL[statusOf(t.pct)]]));
   downloadCSV('تقرير_حالة_المهام_' + fmt(new Date()).replace(/\//g,'-') + '.csv', rows);
